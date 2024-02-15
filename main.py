@@ -3,7 +3,6 @@ import shutil
 
 import torch
 import torch.utils.data
-# import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
@@ -20,10 +19,7 @@ from log import create_logger
 from preprocess import mean, std, preprocess_input_function
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-gpuid', nargs=1, type=str, default='0') # python3 main.py -gpuid=0,1,2,3
 args = parser.parse_args()
-os.environ['CUDA_VISIBLE_DEVICES'] = args.gpuid[0]
-print(os.environ['CUDA_VISIBLE_DEVICES'])
 
 # book keeping namings and code
 from settings import base_architecture, img_size, prototype_shape, num_classes, \
@@ -56,34 +52,24 @@ normalize = transforms.Normalize(mean=mean,
 
 # all datasets
 # train set
-train_dataset = datasets.ImageFolder(
-    train_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-        normalize,
-    ]))
+train_dataset = datasets.CIFAR10(
+            ".", train=True, download=True, transform=transforms.Compose([transforms.AugMix(),transforms.ToTensor(), transforms.Normalize(0 ,1)])
+        )
+
 train_loader = torch.utils.data.DataLoader(
     train_dataset, batch_size=train_batch_size, shuffle=True,
     num_workers=4, pin_memory=False)
 # push set
-train_push_dataset = datasets.ImageFolder(
-    train_push_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-    ]))
+train_push_dataset = datasets.CIFAR10(
+            "", train=True, download=True, transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(0 ,1 )])
+        )
 train_push_loader = torch.utils.data.DataLoader(
     train_push_dataset, batch_size=train_push_batch_size, shuffle=False,
     num_workers=4, pin_memory=False)
 # test set
-test_dataset = datasets.ImageFolder(
-    test_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-        normalize,
-    ]))
+test_dataset = datasets.CIFAR10(
+            ".", train=False, download=True, transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(0 ,1)])
+        )
 test_loader = torch.utils.data.DataLoader(
     test_dataset, batch_size=test_batch_size, shuffle=False,
     num_workers=4, pin_memory=False)
@@ -96,7 +82,7 @@ log('batch size: {0}'.format(train_batch_size))
 
 # construct the model
 ppnet = model.construct_PPNet(base_architecture=base_architecture,
-                              pretrained=True, img_size=img_size,
+                              pretrained=False, img_size=img_size,
                               prototype_shape=prototype_shape,
                               num_classes=num_classes,
                               prototype_activation_function=prototype_activation_function,
@@ -153,11 +139,11 @@ for epoch in range(num_train_epochs):
     accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
                     class_specific=class_specific, log=log)
     save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu,
-                                target_accu=0.70, log=log)
+                                target_accu=0.85, log=log)
 
     if epoch >= push_start and epoch in push_epochs:
         push.push_prototypes(
-            train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
+            train_push_loader, # pytorch dataloader (must be normalized in [0,1])
             prototype_network_parallel=ppnet_multi, # pytorch network with prototype_vectors
             class_specific=class_specific,
             preprocess_input_function=preprocess_input_function, # normalize if needed
@@ -172,18 +158,18 @@ for epoch in range(num_train_epochs):
         accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
                         class_specific=class_specific, log=log)
         save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu,
-                                    target_accu=0.70, log=log)
+                                    target_accu=0.85, log=log)
 
         if prototype_activation_function != 'linear':
             tnt.last_only(model=ppnet_multi, log=log)
-            for i in range(20):
+            for i in range(10):
                 log('iteration: \t{0}'.format(i))
                 _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer,
                               class_specific=class_specific, coefs=coefs, log=log)
                 accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
                                 class_specific=class_specific, log=log)
                 save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu,
-                                            target_accu=0.70, log=log)
+                                            target_accu=0.85, log=log)
    
 logclose()
 
