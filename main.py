@@ -58,21 +58,21 @@ train_dataset = datasets.CIFAR10(
 
 train_loader = torch.utils.data.DataLoader(
     train_dataset, batch_size=train_batch_size, shuffle=True,
-    num_workers=4, pin_memory=False)
+    num_workers=2, pin_memory=False)
 # push set
 train_push_dataset = datasets.CIFAR10(
             "", train=True, download=True, transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(0 ,1 )])
         )
 train_push_loader = torch.utils.data.DataLoader(
     train_push_dataset, batch_size=train_push_batch_size, shuffle=False,
-    num_workers=4, pin_memory=False)
+    num_workers=2, pin_memory=False)
 # test set
 test_dataset = datasets.CIFAR10(
             ".", train=False, download=True, transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(0 ,1)])
         )
 test_loader = torch.utils.data.DataLoader(
     test_dataset, batch_size=test_batch_size, shuffle=False,
-    num_workers=4, pin_memory=False)
+    num_workers=2, pin_memory=False)
 
 # we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
 log('training set size: {0}'.format(len(train_loader.dataset)))
@@ -162,7 +162,7 @@ for epoch in range(num_train_epochs):
 
         if prototype_activation_function != 'linear':
             tnt.last_only(model=ppnet_multi, log=log)
-            for i in range(5):
+            for i in range(20):
                 log('iteration: \t{0}'.format(i))
                 _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer,
                               class_specific=class_specific, coefs=coefs, log=log)
