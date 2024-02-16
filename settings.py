@@ -5,15 +5,15 @@ num_classes = 10
 prototype_activation_function = 'log'
 add_on_layers_type = 'regular'
 
-experiment_run = '003'
+experiment_run = '001'
 
 data_path = './datasets/'
 train_dir = data_path + 'train_cropped_augmented/'
 test_dir = data_path + 'test_cropped/'
 train_push_dir = data_path + 'train_cropped/'
-train_batch_size = 256
-test_batch_size = 256
-train_push_batch_size = 256
+train_batch_size = 85
+test_batch_size = 85
+train_push_batch_size = 85
 
 joint_optimizer_lrs = {'features': 1e-4,
                        'add_on_layers': 3e-3,
