@@ -105,6 +105,7 @@ class SubsetSC(SPEECHCOMMANDS):
 train_set = SubsetSC("training")
 test_set = SubsetSC("testing")
 
+new_sample_rate = 8000
 waveform, sample_rate, label, speaker_id, utterance_number = train_set[0]
 labels = sorted(list(set(datapoint[2] for datapoint in train_set)))
 transform = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=new_sample_rate)
