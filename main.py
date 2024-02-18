@@ -15,8 +15,10 @@ import push
 import prune
 import train_and_test as tnt
 import save
+import torchaudio
 from log import create_logger
 from preprocess import mean, std, preprocess_input_function
+from torchaudio.datasets import SPEECHCOMMANDS
 
 parser = argparse.ArgumentParser()
 args = parser.parse_args()
@@ -52,27 +54,124 @@ normalize = transforms.Normalize(mean=mean,
 
 # all datasets
 # train set
-train_dataset = datasets.CIFAR10(
-            ".", train=True, download=True, transform=transforms.Compose([transforms.AugMix(),transforms.ToTensor(), transforms.Normalize(0 ,1)])
-        )
+
+# *************************** CIFAR 10 **********************************
+
+# train_dataset = datasets.CIFAR10(
+#             ".", train=True, download=True, transform=transforms.Compose([transforms.AugMix(),transforms.ToTensor(), transforms.Normalize(0 ,1)])
+#         )
+
+# train_loader = torch.utils.data.DataLoader(
+#     train_dataset, batch_size=train_batch_size, shuffle=True,
+#     num_workers=2, pin_memory=False)
+# # push set
+# train_push_dataset = datasets.CIFAR10(
+#             "", train=True, download=True, transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(0 ,1 )])
+#         )
+# train_push_loader = torch.utils.data.DataLoader(
+#     train_push_dataset, batch_size=train_push_batch_size, shuffle=False,
+#     num_workers=2, pin_memory=False)
+# # test set
+# test_dataset = datasets.CIFAR10(
+#             ".", train=False, download=True, transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(0 ,1)])
+#         )
+# test_loader = torch.utils.data.DataLoader(
+#     test_dataset, batch_size=test_batch_size, shuffle=False,
+#     num_workers=2, pin_memory=False)
+
+# *************************** CIFAR 10 **********************************
+
+# *************************** AUDIO DATASET **********************************
+
+
+class SubsetSC(SPEECHCOMMANDS):
+    def __init__(self, subset: str = None):
+        super().__init__("./", download=True)
+
+        def load_list(filename):
+            filepath = os.path.join(self._path, filename)
+            with open(filepath) as fileobj:
+                return [os.path.normpath(os.path.join(self._path, line.strip())) for line in fileobj]
+
+        if subset == "validation":
+            self._walker = load_list("validation_list.txt")
+        elif subset == "testing":
+            self._walker = load_list("testing_list.txt")
+        elif subset == "training":
+            excludes = load_list("validation_list.txt") + load_list("testing_list.txt")
+            excludes = set(excludes)
+            self._walker = [w for w in self._walker if w not in excludes]
+
+train_set = SubsetSC("training")
+test_set = SubsetSC("testing")
+
+waveform, sample_rate, label, speaker_id, utterance_number = train_set[0]
+labels = sorted(list(set(datapoint[2] for datapoint in train_set)))
+transform = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=new_sample_rate)
+transformed = transform(waveform)
+def label_to_index(word):
+    # Return the position of the word in labels
+    return torch.tensor(labels.index(word))
+
+
+def index_to_label(index):
+    # Return the word corresponding to the index in labels
+    # This is the inverse of label_to_index
+    return labels[index]
+def pad_sequence(batch):
+    # Make all tensor in a batch the same length by padding with zeros
+    batch = [item.t() for item in batch]
+    batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
+    return batch.permute(0, 2, 1)
+
+
+def collate_fn(batch):
+
+    # A data tuple has the form:
+    # waveform, sample_rate, label, speaker_id, utterance_number
+
+    tensors, targets = [], []
+
+    # Gather in lists, and encode labels as indices
+    for waveform, _, label, *_ in batch:
+        tensors += [waveform]
+        targets += [label_to_index(label)]
+
+    # Group the list of tensors into a batched tensor
+    tensors = pad_sequence(tensors)
+    targets = torch.stack(targets)
+
+    return tensors, targets
+
+
+
+num_workers = 0
+pin_memory = False
 
 train_loader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=train_batch_size, shuffle=True,
-    num_workers=2, pin_memory=False)
-# push set
-train_push_dataset = datasets.CIFAR10(
-            "", train=True, download=True, transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(0 ,1 )])
-        )
+    train_set,
+    batch_size=train_batch_size,
+    shuffle=True,
+    num_workers=2, 
+    pin_memory=False
+)
 train_push_loader = torch.utils.data.DataLoader(
-    train_push_dataset, batch_size=train_push_batch_size, shuffle=False,
-    num_workers=2, pin_memory=False)
-# test set
-test_dataset = datasets.CIFAR10(
-            ".", train=False, download=True, transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(0 ,1)])
-        )
+    train_set,
+    batch_size=train_push_batch_size, 
+    shuffle=False,
+    num_workers=2, 
+    pin_memory=False
+)
 test_loader = torch.utils.data.DataLoader(
-    test_dataset, batch_size=test_batch_size, shuffle=False,
-    num_workers=2, pin_memory=False)
+    test_set,
+    batch_size=test_batch_size,
+    shuffle=False,
+    drop_last=False,
+    num_workers=2, 
+    pin_memory=False
+)
+
+# *************************** AUDIO DATASET **********************************
 
 # we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
 log('training set size: {0}'.format(len(train_loader.dataset)))
