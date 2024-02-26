@@ -140,7 +140,8 @@ def collate_fn(batch):
     # Gather in lists, and encode labels as indices
     for waveform, _, label, *_ in batch:
         tensors += [waveform]
-        targets += torch.eye(35)[label_to_index(label)]
+        targets += [label_to_index(label)]
+        # targets += torch.eye(35)[label_to_index(label)]
 
     # Group the list of tensors into a batched tensor
     tensors = pad_sequence(tensors)
