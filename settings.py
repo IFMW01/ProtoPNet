@@ -1,7 +1,7 @@
 base_architecture = 'vgg11_bn'
 img_size = 32
-prototype_shape = (100, 128, 1, 1)
-num_classes = 10
+prototype_shape = (175, 128, 1, 1)
+num_classes = 35
 prototype_activation_function = 'log'
 add_on_layers_type = 'regular'
 
