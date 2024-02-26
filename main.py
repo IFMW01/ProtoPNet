@@ -105,11 +105,14 @@ class SubsetSC(SPEECHCOMMANDS):
 train_set = SubsetSC("training")
 test_set = SubsetSC("testing")
 
+new_sample_rate = 16000
+labels = sorted(list(set(datapoint[2] for datapoint in train_set)))
+
 new_sample_rate = 8000
 waveform, sample_rate, label, speaker_id, utterance_number = train_set[0]
 labels = sorted(list(set(datapoint[2] for datapoint in train_set)))
-transform = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=new_sample_rate)
-transformed = transform(waveform)
+transform = torchaudio.transforms.MelSpectrogram(new_sample_rate,n_fft = 1024, hop_length=512,n_mels =32)
+
 def label_to_index(word):
     # Return the position of the word in labels
     return torch.tensor(labels.index(word))
@@ -119,6 +122,7 @@ def index_to_label(index):
     # Return the word corresponding to the index in labels
     # This is the inverse of label_to_index
     return labels[index]
+
 def pad_sequence(batch):
     # Make all tensor in a batch the same length by padding with zeros
     batch = [item.t() for item in batch]
@@ -140,6 +144,7 @@ def collate_fn(batch):
 
     # Group the list of tensors into a batched tensor
     tensors = pad_sequence(tensors)
+    tensors = transform(tensors)
     targets = torch.stack(targets)
 
     return tensors, targets
@@ -153,23 +158,26 @@ train_loader = torch.utils.data.DataLoader(
     train_set,
     batch_size=train_batch_size,
     shuffle=True,
-    num_workers=2, 
-    pin_memory=False
+    num_workers=2,
+    pin_memory=False,
+    collate_fn = collate_fn
 )
 train_push_loader = torch.utils.data.DataLoader(
     train_set,
-    batch_size=train_push_batch_size, 
+    batch_size=train_push_batch_size,
     shuffle=False,
-    num_workers=2, 
-    pin_memory=False
+    num_workers=2,
+    pin_memory=False,
+    collate_fn = collate_fn
 )
 test_loader = torch.utils.data.DataLoader(
     test_set,
     batch_size=test_batch_size,
     shuffle=False,
     drop_last=False,
-    num_workers=2, 
-    pin_memory=False
+    num_workers=2,
+    pin_memory=False,
+    collate_fn = collate_fn
 )
 
 # *************************** AUDIO DATASET **********************************
