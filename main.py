@@ -147,15 +147,13 @@ def collate_fn(batch):
     # Group the list of tensors into a batched tensor
     tensors = pad_sequence(tensors)
     tensors = transform(tensors)
+    tensors = torch.from_numpy(tensors)
     # tensors = 10*torch.log10(tensors)
     targets = torch.stack(targets)
 
     return tensors, targets
 
 
-
-num_workers = 0
-pin_memory = False
 
 train_loader = torch.utils.data.DataLoader(
     train_set,
