@@ -105,10 +105,10 @@ class SubsetSC(SPEECHCOMMANDS):
 train_set = SubsetSC("training")
 test_set = SubsetSC("testing")
 
-# new_sample_rate = 16000
+new_sample_rate = 16000
 # labels = sorted(list(set(datapoint[2] for datapoint in train_set)))
 
-new_sample_rate = 8000
+# new_sample_rate = 8000
 waveform, sample_rate, label, speaker_id, utterance_number = train_set[0]
 labels = np.load('./lables.npy')
 labels = labels.tolist()
@@ -148,7 +148,7 @@ def collate_fn(batch):
     tensors = pad_sequence(tensors)
     tensors = transform(tensors)
     tensors = torch.from_numpy(tensors)
-    # tensors = 10*torch.log10(tensors)
+    tensors = 10*torch.log10(tensors)
     targets = torch.stack(targets)
 
     return tensors, targets
