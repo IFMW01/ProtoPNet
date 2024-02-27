@@ -243,7 +243,7 @@ def update_prototypes_on_batch(search_batch_input,
             # crop out the image patch with high activation as prototype image
             proto_img_j = original_img_j[proto_bound_j[0]:proto_bound_j[1],
                                          proto_bound_j[2]:proto_bound_j[3], :]
-
+            
             # save the prototype boundary (rectangular boundary of highly activated region)
             proto_bound_boxes[j, 0] = proto_rf_boxes[j, 0]
             proto_bound_boxes[j, 1] = proto_bound_j[0]
@@ -255,11 +255,13 @@ def update_prototypes_on_batch(search_batch_input,
 
             if dir_for_saving_prototypes is not None:
                 if prototype_self_act_filename_prefix is not None:
+                    proto_act_img_j = torch.einsum("cwh->whc",proto_act_img_j)
                     # save the numpy array of the prototype self activation
                     np.save(os.path.join(dir_for_saving_prototypes,
                                          prototype_self_act_filename_prefix + str(j) + '.npy'),
                             proto_act_img_j)
                 if prototype_img_filename_prefix is not None:
+                    original_img_j = torch.einsum("cwh->whc",original_img_j)
                     # save the whole image containing the prototype as png
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + '-original' + str(j) + '.png'),
@@ -273,6 +275,7 @@ def update_prototypes_on_batch(search_batch_input,
                     heatmap = np.float32(heatmap) / 255
                     heatmap = heatmap[...,::-1]
                     overlayed_original_img_j = 0.5 * original_img_j + 0.3 * heatmap
+                    # overlayed_original_img_j = torch.einsum("cwh->whc",overlayed_original_img_j)
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'),
                                overlayed_original_img_j,
@@ -295,6 +298,7 @@ def update_prototypes_on_batch(search_batch_input,
                                    vmax=1.0)
                     
                     # save the prototype image (highly activated region of the whole image)
+                    proto_img_j = torch.einsum("cwh->whc",proto_img_j)
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + str(j) + '.png'),
                                proto_img_j,
