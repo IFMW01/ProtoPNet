@@ -255,13 +255,15 @@ def update_prototypes_on_batch(search_batch_input,
 
             if dir_for_saving_prototypes is not None:
                 if prototype_self_act_filename_prefix is not None:
-                    proto_act_img_j = torch.einsum("cwh->whc",proto_act_img_j)
+                    proto_act_img_j = np.transpose(proto_act_img_j, (1, 2, 0))  
+                    # proto_act_img_j = torch.einsum("cwh->whc",proto_act_img_j)
                     # save the numpy array of the prototype self activation
                     np.save(os.path.join(dir_for_saving_prototypes,
                                          prototype_self_act_filename_prefix + str(j) + '.npy'),
                             proto_act_img_j)
                 if prototype_img_filename_prefix is not None:
-                    original_img_j = torch.einsum("cwh->whc",original_img_j)
+                    original_img_j = np.transpose(original_img_j, (1, 2, 0)) 
+                    # original_img_j = torch.einsum("cwh->whc",original_img_j)
                     # save the whole image containing the prototype as png
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + '-original' + str(j) + '.png'),
@@ -298,7 +300,8 @@ def update_prototypes_on_batch(search_batch_input,
                                    vmax=1.0)
                     
                     # save the prototype image (highly activated region of the whole image)
-                    proto_img_j = torch.einsum("cwh->whc",proto_img_j)
+                     
+                    proto_img_j = np.transpose(proto_img_j, (1, 2, 0))
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + str(j) + '.png'),
                                proto_img_j,
