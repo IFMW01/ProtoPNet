@@ -8,7 +8,7 @@ import torchvision.datasets as datasets
 
 import argparse
 import re
-
+import numpy as np
 from helpers import makedir
 import model
 import push
@@ -110,7 +110,8 @@ test_set = SubsetSC("testing")
 
 new_sample_rate = 8000
 waveform, sample_rate, label, speaker_id, utterance_number = train_set[0]
-labels = sorted(list(set(datapoint[2] for datapoint in train_set)))
+labels = np.load('./lables.npy')
+labels = labels.tolist()
 transform = torchaudio.transforms.MelSpectrogram(new_sample_rate,n_fft = 1024, hop_length=512,n_mels =32)
 
 def label_to_index(word):
@@ -146,6 +147,7 @@ def collate_fn(batch):
     # Group the list of tensors into a batched tensor
     tensors = pad_sequence(tensors)
     tensors = transform(tensors)
+    tensors = 10*torch.log10(tensors)
     targets = torch.stack(targets)
 
     return tensors, targets
