@@ -262,12 +262,13 @@ def update_prototypes_on_batch(search_batch_input,
                                          prototype_self_act_filename_prefix + str(j) + '.npy'),
                             proto_act_img_j)
                 if prototype_img_filename_prefix is not None:
-                    original_img_j = np.transpose(original_img_j, (1, 2, 0)) 
+                    original_img_j_format = original_img_j.reshape((32, 32))  
+                    # original_img_j = np.transpose(original_img_j, (1, 2, 0)) 
                     # original_img_j = torch.einsum("cwh->whc",original_img_j)
                     # save the whole image containing the prototype as png
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + '-original' + str(j) + '.png'),
-                               original_img_j,
+                               original_img_j_format,
                                vmin=0.0,
                                vmax=1.0)
                     # overlay (upsampled) self activation on original image and save the result
@@ -277,10 +278,11 @@ def update_prototypes_on_batch(search_batch_input,
                     heatmap = np.float32(heatmap) / 255
                     heatmap = heatmap[...,::-1]
                     overlayed_original_img_j = 0.5 * original_img_j + 0.3 * heatmap
+                    overlayed_original_img_j_format =  overlayed_original_img_j.reshape((32, 32)) 
                     # overlayed_original_img_j = torch.einsum("cwh->whc",overlayed_original_img_j)
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'),
-                               overlayed_original_img_j,
+                               overlayed_original_img_j_format,
                                vmin=0.0,
                                vmax=1.0)
                     
@@ -293,18 +295,20 @@ def update_prototypes_on_batch(search_batch_input,
                                    vmax=1.0)
                         overlayed_rf_img_j = overlayed_original_img_j[rf_prototype_j[1]:rf_prototype_j[2],
                                                                       rf_prototype_j[3]:rf_prototype_j[4]]
+                        overlayed_rf_img_j_format = overlayed_rf_img_j.reshape((32, 32)) 
                         plt.imsave(os.path.join(dir_for_saving_prototypes,
                                                 prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'),
-                                   overlayed_rf_img_j,
+                                   overlayed_rf_img_j_format,
                                    vmin=0.0,
                                    vmax=1.0)
                     
                     # save the prototype image (highly activated region of the whole image)
                      
-                    proto_img_j = np.transpose(proto_img_j, (1, 2, 0))
+                    proto_img_j_format = proto_img_j_format.reshape((32, 32)) 
+                    # proto_img_j = np.transpose(proto_img_j, (1, 2, 0))
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + str(j) + '.png'),
-                               proto_img_j,
+                               proto_img_j_format,
                                vmin=0.0,
                                vmax=1.0)
                 
