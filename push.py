@@ -255,7 +255,7 @@ def update_prototypes_on_batch(search_batch_input,
 
             if dir_for_saving_prototypes is not None:
                 if prototype_self_act_filename_prefix is not None:
-                    proto_act_img_j = np.transpose(proto_act_img_j, (1, 2, 0))  
+                    # proto_act_img_j = np.transpose(proto_act_img_j, (1, 2, 0))  
                     # proto_act_img_j = torch.einsum("cwh->whc",proto_act_img_j)
                     # save the numpy array of the prototype self activation
                     np.save(os.path.join(dir_for_saving_prototypes,
