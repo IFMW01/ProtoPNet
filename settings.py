@@ -1,6 +1,6 @@
 base_architecture = 'vgg11_bn'
 img_size = 32
-prototype_shape = (175, 128, 1, 1)
+prototype_shape = (105, 128, 1, 1)
 num_classes = 35
 prototype_activation_function = 'log'
 add_on_layers_type = 'regular'
@@ -32,8 +32,8 @@ coefs = {
     'l1': 1e-4,
 }
 
-num_train_epochs = 20
-num_warm_epochs = 0
+num_train_epochs = 30
+num_warm_epochs = 2
 
-push_start = 1
+push_start = 5
 push_epochs = [i for i in range(num_train_epochs) if i % push_start == 0]
