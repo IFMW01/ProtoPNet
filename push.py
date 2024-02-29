@@ -269,6 +269,9 @@ def update_prototypes_on_batch(search_batch_input,
                     plt.imshow(original_img_j) 
                     plt.savefig(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + '-original' + str(j) + '.png'))
+                    np.save(os.path.join(dir_for_saving_prototypes,
+                                            prototype_img_filename_prefix + '-original' + str(j) + '.npy'),original_img_j.numpy())
+
                     # overlay (upsampled) self activation on original image and save the result
                     rescaled_act_img_j = upsampled_act_img_j - np.amin(upsampled_act_img_j)
                     rescaled_act_img_j = rescaled_act_img_j / np.amax(rescaled_act_img_j)
@@ -307,6 +310,7 @@ def update_prototypes_on_batch(search_batch_input,
                                proto_img_j_format,
                                vmin=0.0,
                                vmax=1.0)
+                    np.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.npy'),proto_img_j_format.numpy())
                 
     if class_specific:
         del class_to_img_index_dict
