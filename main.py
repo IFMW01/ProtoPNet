@@ -107,14 +107,35 @@ class SubsetSC(SPEECHCOMMANDS):
 train_set = SubsetSC("training")
 test_set = SubsetSC("testing")
 
-new_sample_rate = 16000
-# labels = sorted(list(set(datapoint[2] for datapoint in train_set)))
+class MelSpectogram(torch.nn.Module):
+    def __init__(
+        self,
+        input_freq=16000,
+        resample_freq=16000,
+        n_fft=1024,
+        n_mel=32,
+        stretch_factor=0.8,
+    ):
+        super().__init__()
 
-# new_sample_rate = 8000
-waveform, sample_rate, label, speaker_id, utterance_number = train_set[0]
+        self.spec = torchaudio.transforms.Spectrogram(n_fft=n_fft, power=2)
+
+        self.mel_scale = torchaudio.transforms.MelScale(
+            n_mels=n_mel, sample_rate=resample_freq, n_stft=n_fft // 2 + 1)
+
+    def forward(self, waveform: torch.Tensor) -> torch.Tensor:
+        spec = self.spec(waveform)
+
+        mel = self.mel_scale(spec)
+
+        return mel
+
 labels = np.load('./lables.npy')
 labels = labels.tolist()
-transform = torchaudio.transforms.MelSpectrogram(new_sample_rate,n_fft = 1024, hop_length=512,n_mels =32)
+# transform = torchaudio.transforms.MelSpectrogram(new_sample_rate,n_fft = 1024, hop_length=512,n_mels =32)
+
+pipeline_to_mel = MelSpectogram()
+pipeline_to_mel.to(dtype=torch.float32)
 
 def label_to_index(word):
     # Return the position of the word in labels
@@ -148,7 +169,7 @@ def collate_fn(batch):
 
     # Group the list of tensors into a batched tensor
     tensors = pad_sequence(tensors)
-    tensors = transform(tensors)
+    tensors = pipeline_to_mel(tensors)
     # tensors = 10*math.log10(tensors)
     # tensors = 10*torch.log10(tensors)
     targets = torch.stack(targets)
@@ -273,7 +294,7 @@ for epoch in range(num_train_epochs):
 
         if prototype_activation_function != 'linear':
             tnt.last_only(model=ppnet_multi, log=log)
-            for i in range(5):
+            for i in range(1):
                 log('iteration: \t{0}'.format(i))
                 _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer,
                               class_specific=class_specific, coefs=coefs, log=log)
