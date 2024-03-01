@@ -270,9 +270,9 @@ def update_prototypes_on_batch(search_batch_input,
                     original_img_j_format = np.squeeze(original_img_j_format) 
                     # original_img_j = torch.einsum("cwh->whc",original_img_j)
                     # save the whole image containing the prototype as png
-                    plt.imshow(original_img_j) 
-                    plt.savefig(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + '-original' + str(j) + '.png'))
+                    # plt.imshow(original_img_j) 
+                    # plt.savefig(os.path.join(dir_for_saving_prototypes,
+                    #                         prototype_img_filename_prefix + '-original' + str(j) + '.png'))
                     np.save(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + '-original' + str(j) + '.npy'),original_img_j)
 
@@ -284,37 +284,43 @@ def update_prototypes_on_batch(search_batch_input,
                     heatmap = heatmap[...,::-1]
                     overlayed_original_img_j = 0.5 * original_img_j + 0.3 * heatmap
                     overlayed_original_img_j_format = np.transpose(overlayed_original_img_j, (1, 2, 0))
-                    overlayed_original_img_j_format = np.squeeze(overlayed_original_img_j_format) 
-                    plt.imshow(overlayed_original_img_j) 
-                    # overlayed_original_img_j = torch.einsum("cwh->whc",overlayed_original_img_j)
-                    plt.savefig(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'))
+                    overlayed_original_img_j_format = np.squeeze(overlayed_original_img_j_format)
+                    np.save(os.path.join(dir_for_saving_prototypes,
+                                            prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.npy'),overlayed_original_img_j) 
+                    # plt.imshow(overlayed_original_img_j) 
+                    # # overlayed_original_img_j = torch.einsum("cwh->whc",overlayed_original_img_j)
+                    # plt.savefig(os.path.join(dir_for_saving_prototypes,
+                    #                         prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'))
                     
                     # if different from the original (whole) image, save the prototype receptive field as png
                     if rf_img_j.shape[0] != original_img_size or rf_img_j.shape[1] != original_img_size:
-                        plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                                prototype_img_filename_prefix + '-receptive_field' + str(j) + '.png'),
-                                   rf_img_j,
-                                   vmin=0.0,
-                                   vmax=1.0)
+                        # plt.imsave(os.path.join(dir_for_saving_prototypes,
+                        #                         prototype_img_filename_prefix + '-receptive_field' + str(j) + '.png'),
+                        #            rf_img_j,
+                        #            vmin=0.0,
+                        #            vmax=1.0)
+                        np.save(os.path.join(dir_for_saving_prototypes,
+                                                prototype_img_filename_prefix + '-receptive_field' + str(j) + '.npy'),proto_img_j)
                         overlayed_rf_img_j = overlayed_original_img_j[rf_prototype_j[1]:rf_prototype_j[2],
                                                                       rf_prototype_j[3]:rf_prototype_j[4]]
-                        plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                                prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'),
-                                   overlayed_rf_img_j,
-                                   vmin=0.0,
-                                   vmax=1.0)
+                        np.save(os.path.join(dir_for_saving_prototypes,
+                                                prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.npy'),overlayed_rf_img_j) 
+                        # plt.imsave(os.path.join(dir_for_saving_prototypes,
+                        #                         prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'),
+                        #            overlayed_rf_img_j,
+                        #            vmin=0.0,
+                        #            vmax=1.0)
                     
                     # save the prototype image (highly activated region of the whole image)
                      
-                    proto_img_j_format = np.transpose(proto_img_j, (1, 2, 0))
-                    proto_img_j_format = np.squeeze(proto_img_j_format) 
-                    plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + str(j) + '.png'),
-                               proto_img_j_format,
-                               vmin=0.0,
-                               vmax=1.0)
-                    np.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.npy'),proto_img_j_format)
+                    # proto_img_j_format = np.transpose(proto_img_j, (1, 2, 0))
+                    # proto_img_j_format = np.squeeze(proto_img_j_format) 
+                    # plt.imsave(os.path.join(dir_for_saving_prototypes,
+                    #                         prototype_img_filename_prefix + str(j) + '.png'),
+                    #            proto_img_j_format,
+                    #            vmin=0.0,
+                    #            vmax=1.0)
+                    np.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.npy'),proto_img_j)
                 
     if class_specific:
         del class_to_img_index_dict
