@@ -172,6 +172,7 @@ def collate_fn(batch):
     tensors = pad_sequence(tensors)
     tensors = pipeline_to_mel(tensors)
     tensors = librosa.power_to_db(tensors)
+    tensors = torch.tensor(tensors)
     # tensors = 10*math.log10(tensors)
     # tensors = 10*torch.log10(tensors)
     targets = torch.stack(targets)
