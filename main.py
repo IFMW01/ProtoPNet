@@ -20,6 +20,7 @@ from log import create_logger
 from preprocess import mean, std, preprocess_input_function
 from torchaudio.datasets import SPEECHCOMMANDS
 import math
+import librosa
 
 
 parser = argparse.ArgumentParser()
@@ -170,6 +171,7 @@ def collate_fn(batch):
     # Group the list of tensors into a batched tensor
     tensors = pad_sequence(tensors)
     tensors = pipeline_to_mel(tensors)
+    tensors = librosa.power_to_db(tensors)
     # tensors = 10*math.log10(tensors)
     # tensors = 10*torch.log10(tensors)
     targets = torch.stack(targets)
