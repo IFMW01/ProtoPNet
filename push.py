@@ -243,7 +243,7 @@ def update_prototypes_on_batch(search_batch_input,
             # crop out the image patch with high activation as prototype image
             proto_img_j = original_img_j[proto_bound_j[0]:proto_bound_j[1],
                                          proto_bound_j[2]:proto_bound_j[3], :]
-            
+            np.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '_Boundary.npy'),proto_bound_j)
             # save the prototype boundary (rectangular boundary of highly activated region)
             proto_bound_boxes[j, 0] = proto_rf_boxes[j, 0]
             proto_bound_boxes[j, 1] = proto_bound_j[0]
@@ -270,7 +270,7 @@ def update_prototypes_on_batch(search_batch_input,
                     plt.savefig(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + '-original' + str(j) + '.png'))
                     np.save(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + '-original' + str(j) + '.npy'),original_img_j.numpy())
+                                            prototype_img_filename_prefix + '-original' + str(j) + '.npy'),original_img_j)
 
                     # overlay (upsampled) self activation on original image and save the result
                     rescaled_act_img_j = upsampled_act_img_j - np.amin(upsampled_act_img_j)
@@ -310,7 +310,7 @@ def update_prototypes_on_batch(search_batch_input,
                                proto_img_j_format,
                                vmin=0.0,
                                vmax=1.0)
-                    np.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.npy'),proto_img_j_format.numpy())
+                    np.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '.npy'),proto_img_j_format)
                 
     if class_specific:
         del class_to_img_index_dict

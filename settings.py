@@ -1,4 +1,4 @@
-base_architecture = 'vgg11_bn'
+base_architecture = 'resnet18'
 img_size = 32
 prototype_shape = (105, 128, 1, 1)
 num_classes = 35
@@ -33,7 +33,7 @@ coefs = {
 }
 
 num_train_epochs = 60
-num_warm_epochs = 0
+num_warm_epochs = 2
 
-push_start = 1
+push_start = 10
 push_epochs = [i for i in range(num_train_epochs) if i % push_start == 0]
