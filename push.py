@@ -243,7 +243,11 @@ def update_prototypes_on_batch(search_batch_input,
             # crop out the image patch with high activation as prototype image
             proto_img_j = original_img_j[proto_bound_j[0]:proto_bound_j[1],
                                          proto_bound_j[2]:proto_bound_j[3], :]
-            np.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '_Boundary.npy'),proto_bound_j)
+            full_proto_j = np.zeros(shape=original_img_j.shape)
+            full_proto_j[proto_bound_j[0]:proto_bound_j[1],proto_bound_j[2]:proto_bound_j[3], :] = original_img_j[proto_bound_j[0]:proto_bound_j[1], proto_bound_j[2]:proto_bound_j[3], :]
+
+            np.save(os.path.join(dir_for_saving_prototypes, prototype_img_filename_prefix + str(j) + '_FULL.npy'),full_proto_j)
+
             # save the prototype boundary (rectangular boundary of highly activated region)
             proto_bound_boxes[j, 0] = proto_rf_boxes[j, 0]
             proto_bound_boxes[j, 1] = proto_bound_j[0]
