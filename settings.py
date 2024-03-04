@@ -32,12 +32,8 @@ coefs = {
     'l1': 1e-4,
 }
 
-<<<<<<< HEAD
 num_train_epochs = 100
-=======
-num_train_epochs = 18
->>>>>>> parent of 7283ce1 (Full run)
 num_warm_epochs = 0
 
-push_start = 1
+push_start = 5
 push_epochs = [i for i in range(num_train_epochs) if i % push_start == 0]

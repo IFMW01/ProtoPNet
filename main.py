@@ -333,11 +333,7 @@ for epoch in range(num_train_epochs):
     accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
                     class_specific=class_specific, log=log)
     save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu,
-<<<<<<< HEAD
                                 target_accu=0.86, log=log)
-=======
-                                target_accu=0.74, log=log)
->>>>>>> parent of 7283ce1 (Full run)
 
     if epoch >= push_start and epoch in push_epochs:
         push.push_prototypes(
@@ -356,30 +352,18 @@ for epoch in range(num_train_epochs):
         accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
                         class_specific=class_specific, log=log)
         save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu,
-<<<<<<< HEAD
                                     target_accu=0.86, log=log)
 
         if prototype_activation_function != 'linear':
             tnt.last_only(model=ppnet_multi, log=log)
             for i in range(20):
-=======
-                                    target_accu=0.74, log=log)
-
-        if prototype_activation_function != 'linear':
-            tnt.last_only(model=ppnet_multi, log=log)
-            for i in range(1):
->>>>>>> parent of 7283ce1 (Full run)
                 log('iteration: \t{0}'.format(i))
                 _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer,
                               class_specific=class_specific, coefs=coefs, log=log)
                 accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
                                 class_specific=class_specific, log=log)
                 save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu,
-<<<<<<< HEAD
                                             target_accu=0.99, log=log)
-=======
-                                            target_accu=0.74, log=log)
->>>>>>> parent of 7283ce1 (Full run)
    
 logclose()
 
