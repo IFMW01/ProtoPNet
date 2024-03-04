@@ -30,7 +30,8 @@ base_architecture_to_features = {'resnet18': resnet18_features,
 
 class PPNet(nn.Module):
 
-    def __init__(self, features, img_size, prototype_shape, num_classes, init_weights=True,
+    def __init__(self, features, img_size, prototype_shape,
+                 proto_layer_rf_info, num_classes, init_weights=True,
                  prototype_activation_function='log',
                  add_on_layers_type='bottleneck'):
 
@@ -58,6 +59,8 @@ class PPNet(nn.Module):
         num_prototypes_per_class = self.num_prototypes // self.num_classes
         for j in range(self.num_prototypes):
             self.prototype_class_identity[j, j // num_prototypes_per_class] = 1
+
+        self.proto_layer_rf_info = proto_layer_rf_info
 
         # this has to be named features to allow the precise loading
         self.features = features
@@ -237,14 +240,18 @@ class PPNet(nn.Module):
         rep = (
             'PPNet(\n'
             '\tfeatures: {},\n'
+            '\timg_size: {},\n'
             '\tprototype_shape: {},\n'
+            '\tproto_layer_rf_info: {},\n'
             '\tnum_classes: {},\n'
             '\tepsilon: {}\n'
             ')'
         )
 
         return rep.format(self.features,
+                          self.img_size,
                           self.prototype_shape,
+                          self.proto_layer_rf_info,
                           self.num_classes,
                           self.epsilon)
 
@@ -284,10 +291,15 @@ def construct_PPNet(base_architecture, pretrained=True, img_size=224,
                     add_on_layers_type='bottleneck'):
     features = base_architecture_to_features[base_architecture](pretrained=pretrained)
     layer_filter_sizes, layer_strides, layer_paddings = features.conv_info()
-
+    proto_layer_rf_info = compute_proto_layer_rf_info_v2(img_size=img_size,
+                                                         layer_filter_sizes=layer_filter_sizes,
+                                                         layer_strides=layer_strides,
+                                                         layer_paddings=layer_paddings,
+                                                         prototype_kernel_size=prototype_shape[2])
     return PPNet(features=features,
                  img_size=img_size,
                  prototype_shape=prototype_shape,
+                 proto_layer_rf_info=proto_layer_rf_info,
                  num_classes=num_classes,
                  init_weights=True,
                  prototype_activation_function=prototype_activation_function,

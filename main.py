@@ -5,9 +5,7 @@ import torch
 import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-
 from audiomentations import Compose, AddGaussianNoise, Shift, Gain
-
 import argparse
 import re
 import numpy as np
@@ -132,7 +130,7 @@ class MelSpectogram(torch.nn.Module):
         mel = self.mel_scale(spec)
 
         return mel
-
+    
 class WavToSpec(torch.nn.Module):
     def __init__(
         self,
@@ -157,6 +155,44 @@ class WavToSpec(torch.nn.Module):
 
         return spec
 
+agument = Compose([
+    Gain(p=0.25),
+    AddGaussianNoise(
+        min_amplitude=1,
+        max_amplitude=2,
+        p=0.25
+    ),
+    Shift(p=0.25),
+])
+
+def pad_sequence_aug(batch):
+    # Make all tensor in a batch the same length by padding with zeros
+    batch = [item.t() for item in batch]
+    batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
+    batch = agument(samples=batch, sample_rate=16000)
+    batch = torch.Tensor(batch)
+    return batch.permute(0, 2, 1)
+
+def aug_collate_fn(batch):
+
+    # A data tuple has the form:
+    # waveform, sample_rate, label, speaker_id, utterance_number
+
+    tensors, targets = [], []
+
+    # Gather in lists, and encode labels as indices
+    for waveform, _, label, *_ in batch:
+        tensors += [waveform]
+        targets += [label_to_index(label)]
+        # targets += torch.eye(35)[label_to_index(label)]
+    # tensors = np.array(tensors)
+    # Group the list of tensors into a batched tensor
+    tensors = pad_sequence_aug(tensors)
+    tensors = pipeline_to_spec(tensors)
+    targets = torch.stack(targets)
+
+    return tensors, targets
+
 labels = np.load('./lables.npy')
 labels = labels.tolist()
 # transform = torchaudio.transforms.MelSpectrogram(new_sample_rate,n_fft = 1024, hop_length=512,n_mels =32)
@@ -180,13 +216,6 @@ def pad_sequence(batch):
     batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
     return batch.permute(0, 2, 1)
 
-def pad_sequence_aug(batch):
-    # Make all tensor in a batch the same length by padding with zeros
-    batch = [item.t() for item in batch]
-    batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
-    batch = agument(samples=batch, sample_rate=16000)
-    batch = torch.Tensor(batch)
-    return batch.permute(0, 2, 1)
 
 def collate_fn(batch):
 
@@ -200,7 +229,7 @@ def collate_fn(batch):
         tensors += [waveform]
         targets += [label_to_index(label)]
         # targets += torch.eye(35)[label_to_index(label)]
-    # tensors = np.array(tensors)
+
     # Group the list of tensors into a batched tensor
     tensors = pad_sequence(tensors)
     tensors = pipeline_to_spec(tensors)
@@ -209,36 +238,6 @@ def collate_fn(batch):
     return tensors, targets
 
 
-agument = Compose([
-    Gain(p=0.25),
-    AddGaussianNoise(
-        min_amplitude=1,
-        max_amplitude=2,
-        p=0.25
-    ),
-    Shift(p=0.25),
-])
-
-def aug_collate_fn(batch):
-
-    # A data tuple has the form:
-    # waveform, sample_rate, label, speaker_id, utterance_number
-
-    tensors, targets = [], []
-
-    # Gather in lists, and encode labels as indices
-    for waveform, _, label, *_ in batch:
-        tensors += [waveform]
-        targets += [label_to_index(label)]
-        # targets += torch.eye(35)[label_to_index(label)]
-    # tensors = np.array(tensors)
-    # Group the list of tensors into a batched tensor
-    tensors = pad_sequence_aug(tensors)
-    tensors = pipeline_to_spec(tensors)
-    targets = torch.stack(targets)
-
-    return tensors, targets
-
 
 train_loader = torch.utils.data.DataLoader(
     train_set,
@@ -246,7 +245,8 @@ train_loader = torch.utils.data.DataLoader(
     shuffle=True,
     num_workers=4,
     pin_memory=False,
-    collate_fn = aug_collate_fn
+    transforms = aug_collate_fn
+    collate_fn = collate_fn
 )
 train_push_loader = torch.utils.data.DataLoader(
     train_set,
@@ -333,7 +333,7 @@ for epoch in range(num_train_epochs):
     accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
                     class_specific=class_specific, log=log)
     save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu,
-                                target_accu=0.86, log=log)
+                                target_accu=0.80, log=log)
 
     if epoch >= push_start and epoch in push_epochs:
         push.push_prototypes(
@@ -352,18 +352,18 @@ for epoch in range(num_train_epochs):
         accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
                         class_specific=class_specific, log=log)
         save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu,
-                                    target_accu=0.86, log=log)
+                                    target_accu=0.80, log=log)
 
         if prototype_activation_function != 'linear':
             tnt.last_only(model=ppnet_multi, log=log)
-            for i in range(20):
+            for i in range(10):
                 log('iteration: \t{0}'.format(i))
                 _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer,
                               class_specific=class_specific, coefs=coefs, log=log)
                 accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
                                 class_specific=class_specific, log=log)
                 save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu,
-                                            target_accu=0.99, log=log)
+                                            target_accu=0.80, log=log)
    
 logclose()
 
