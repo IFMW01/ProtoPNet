@@ -5,7 +5,7 @@ import torch
 import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-
+from audiomentations import Compose, AddGaussianNoise, Shift, Gain
 import argparse
 import re
 import numpy as np
@@ -155,12 +155,42 @@ class WavToSpec(torch.nn.Module):
 
         return spec
 
+agument = Compose([
+    Gain(p=0.25),
+    AddGaussianNoise(
+        min_amplitude=1,
+        max_amplitude=2,
+        p=0.25
+    ),
+    Shift(p=0.25),
+])
+
+def aug_collate_fn(batch):
+
+    # A data tuple has the form:
+    # waveform, sample_rate, label, speaker_id, utterance_number
+
+    tensors, targets = [], []
+
+    # Gather in lists, and encode labels as indices
+    for waveform, _, label, *_ in batch:
+        tensors += [waveform]
+        targets += [label_to_index(label)]
+        # targets += torch.eye(35)[label_to_index(label)]
+    # tensors = np.array(tensors)
+    # Group the list of tensors into a batched tensor
+    tensors = pad_sequence_aug(tensors)
+    tensors = pipeline_to_spec(tensors)
+    targets = torch.stack(targets)
+
+    return tensors, targets
+
 labels = np.load('./lables.npy')
 labels = labels.tolist()
 # transform = torchaudio.transforms.MelSpectrogram(new_sample_rate,n_fft = 1024, hop_length=512,n_mels =32)
 
-pipeline_to_mel = MelSpectogram()
-pipeline_to_mel.to(dtype=torch.float32)
+pipeline_to_spec = WavToSpec()
+pipeline_to_spec.to(dtype=torch.float32)
 
 def label_to_index(word):
     # Return the position of the word in labels
@@ -194,11 +224,7 @@ def collate_fn(batch):
 
     # Group the list of tensors into a batched tensor
     tensors = pad_sequence(tensors)
-    tensors = pipeline_to_mel(tensors)
-    tensors = librosa.power_to_db(tensors)
-    tensors = torch.tensor(tensors)
-    # tensors = 10*math.log10(tensors)
-    # tensors = 10*torch.log10(tensors)
+    tensors = pipeline_to_spec(tensors)
     targets = torch.stack(targets)
 
     return tensors, targets
@@ -209,15 +235,16 @@ train_loader = torch.utils.data.DataLoader(
     train_set,
     batch_size=train_batch_size,
     shuffle=True,
-    num_workers=2,
+    num_workers=4,
     pin_memory=False,
+    transforms = aug_collate_fn
     collate_fn = collate_fn
 )
 train_push_loader = torch.utils.data.DataLoader(
     train_set,
     batch_size=train_push_batch_size,
     shuffle=False,
-    num_workers=2,
+    num_workers=4,
     pin_memory=False,
     collate_fn = collate_fn
 )
@@ -226,7 +253,7 @@ test_loader = torch.utils.data.DataLoader(
     batch_size=test_batch_size,
     shuffle=False,
     drop_last=False,
-    num_workers=2,
+    num_workers=4,
     pin_memory=False,
     collate_fn = collate_fn
 )
