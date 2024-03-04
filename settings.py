@@ -11,9 +11,9 @@ data_path = './datasets/'
 train_dir = data_path + 'train_cropped_augmented/'
 test_dir = data_path + 'test_cropped/'
 train_push_dir = data_path + 'train_cropped/'
-train_batch_size = 85
-test_batch_size = 85
-train_push_batch_size = 85
+train_batch_size = 256
+test_batch_size = 256
+train_push_batch_size = 256
 
 joint_optimizer_lrs = {'features': 1e-4,
                        'add_on_layers': 3e-3,
@@ -32,7 +32,7 @@ coefs = {
     'l1': 1e-4,
 }
 
-num_train_epochs = 45
+num_train_epochs = 100
 num_warm_epochs = 0
 
 push_start = 5
