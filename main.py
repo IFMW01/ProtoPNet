@@ -130,6 +130,30 @@ class MelSpectogram(torch.nn.Module):
         mel = self.mel_scale(spec)
 
         return mel
+    
+class WavToSpec(torch.nn.Module):
+    def __init__(
+        self,
+        input_freq=16000,
+        resample_freq=16000,
+        n_fft=1024,
+        n_mel=32,
+        stretch_factor=0.8,
+    ):
+        super().__init__()
+
+        self.spec = torchaudio.transforms.Spectrogram(n_fft=n_fft, power=2)
+
+        self.mel_scale = torchaudio.transforms.MelScale(
+            n_mels=n_mel, sample_rate=resample_freq, n_stft=n_fft // 2 + 1)
+
+    def forward(self, waveform: torch.Tensor) -> torch.Tensor:
+        spec = self.spec(waveform)
+        # spec = torch.from_numpy(librosa.power_to_db(spec))
+        # mel = self.mel_scale(spec)
+        spec = torch.from_numpy(librosa.power_to_db(spec))
+
+        return spec
 
 labels = np.load('./lables.npy')
 labels = labels.tolist()
