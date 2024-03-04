@@ -32,8 +32,8 @@ coefs = {
     'l1': 1e-4,
 }
 
-num_train_epochs = 100
+num_train_epochs = 120
 num_warm_epochs = 0
 
-push_start = 1
+push_start = 10
 push_epochs = [i for i in range(num_train_epochs) if i % push_start == 0]
