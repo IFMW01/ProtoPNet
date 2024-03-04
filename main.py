@@ -165,6 +165,14 @@ agument = Compose([
     Shift(p=0.25),
 ])
 
+def pad_sequence_aug(batch):
+    # Make all tensor in a batch the same length by padding with zeros
+    batch = [item.t() for item in batch]
+    batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
+    batch = agument(samples=batch, sample_rate=16000)
+    batch = torch.Tensor(batch)
+    return batch.permute(0, 2, 1)
+
 def aug_collate_fn(batch):
 
     # A data tuple has the form:
