@@ -245,8 +245,7 @@ train_loader = torch.utils.data.DataLoader(
     shuffle=True,
     num_workers=4,
     pin_memory=False,
-    transforms = aug_collate_fn
-    collate_fn = collate_fn
+    collate_fn = aug_collate_fn
 )
 train_push_loader = torch.utils.data.DataLoader(
     train_set,
