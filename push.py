@@ -279,14 +279,14 @@ def update_prototypes_on_batch(search_batch_input,
                     # overlay (upsampled) self activation on original image and save the result
                     rescaled_act_img_j = upsampled_act_img_j - np.amin(upsampled_act_img_j)
                     rescaled_act_img_j = rescaled_act_img_j / np.amax(rescaled_act_img_j)
-                    heatmap = cv2.applyColorMap(np.uint8(255*rescaled_act_img_j), cv2.COLORMAP_JET)
-                    heatmap = np.float32(heatmap) / 255
-                    heatmap = heatmap[...,::-1]
-                    overlayed_original_img_j = 0.5 * original_img_j + 0.3 * heatmap
-                    overlayed_original_img_j_format = np.transpose(overlayed_original_img_j, (1, 2, 0))
-                    overlayed_original_img_j_format = np.squeeze(overlayed_original_img_j_format)
-                    np.save(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.npy'),overlayed_original_img_j) 
+                    # heatmap = cv2.applyColorMap(np.uint8(255*rescaled_act_img_j), cv2.COLORMAP_JET)
+                    # heatmap = np.float32(heatmap) / 255
+                    # heatmap = heatmap[...,::-1]
+                    # overlayed_original_img_j = 0.5 * original_img_j + 0.3 * heatmap
+                    # overlayed_original_img_j_format = np.transpose(overlayed_original_img_j, (1, 2, 0))
+                    # overlayed_original_img_j_format = np.squeeze(overlayed_original_img_j_format)
+                    # np.save(os.path.join(dir_for_saving_prototypes,
+                    #                         prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.npy'),overlayed_original_img_j) 
                     # plt.imshow(overlayed_original_img_j) 
                     # # overlayed_original_img_j = torch.einsum("cwh->whc",overlayed_original_img_j)
                     # plt.savefig(os.path.join(dir_for_saving_prototypes,
@@ -294,17 +294,18 @@ def update_prototypes_on_batch(search_batch_input,
                     
                     # if different from the original (whole) image, save the prototype receptive field as png
                     if rf_img_j.shape[0] != original_img_size or rf_img_j.shape[1] != original_img_size:
+                        pass
                         # plt.imsave(os.path.join(dir_for_saving_prototypes,
                         #                         prototype_img_filename_prefix + '-receptive_field' + str(j) + '.png'),
                         #            rf_img_j,
                         #            vmin=0.0,
                         #            vmax=1.0)
-                        np.save(os.path.join(dir_for_saving_prototypes,
-                                                prototype_img_filename_prefix + '-receptive_field' + str(j) + '.npy'),proto_img_j)
-                        overlayed_rf_img_j = overlayed_original_img_j[rf_prototype_j[1]:rf_prototype_j[2],
-                                                                      rf_prototype_j[3]:rf_prototype_j[4]]
-                        np.save(os.path.join(dir_for_saving_prototypes,
-                                                prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.npy'),overlayed_rf_img_j) 
+                        # np.save(os.path.join(dir_for_saving_prototypes,
+                        #                         prototype_img_filename_prefix + '-receptive_field' + str(j) + '.npy'),proto_img_j)
+                        # overlayed_rf_img_j = overlayed_original_img_j[rf_prototype_j[1]:rf_prototype_j[2],
+                        #                                               rf_prototype_j[3]:rf_prototype_j[4]]
+                        # np.save(os.path.join(dir_for_saving_prototypes,
+                        #                         prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.npy'),overlayed_rf_img_j) 
                         # plt.imsave(os.path.join(dir_for_saving_prototypes,
                         #                         prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'),
                         #            overlayed_rf_img_j,
