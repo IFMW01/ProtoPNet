@@ -1,5 +1,5 @@
 base_architecture = 'vgg11'
-img_size = 32
+img_size = 513
 prototype_shape = (105, 128, 1, 1)
 num_classes = 35
 prototype_activation_function = 'log'
