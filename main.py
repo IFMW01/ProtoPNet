@@ -204,6 +204,10 @@ def collate_fn(batch):
     # Group the list of tensors into a batched tensor
     tensors = pad_sequence(tensors)
     tensors = pipeline_to_spec(tensors)
+    # tensors = librosa.power_to_db(tensors)
+    tensors = torch.tensor(tensors)
+    # tensors = 10*math.log10(tensors)
+    # tensors = 10*torch.log10(tensors)
     targets = torch.stack(targets)
 
     return tensors, targets
@@ -235,6 +239,10 @@ def aug_collate_fn(batch):
     # Group the list of tensors into a batched tensor
     tensors = pad_sequence_aug(tensors)
     tensors = pipeline_to_spec(tensors)
+    # tensors = librosa.power_to_db(tensors)
+    tensors = torch.tensor(tensors)
+    # tensors = 10*math.log10(tensors)
+    # tensors = 10*torch.log10(tensors)
     targets = torch.stack(targets)
 
     return tensors, targets
