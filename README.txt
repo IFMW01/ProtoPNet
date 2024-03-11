@@ -1,3 +1,4 @@
+==================================================================================
 # R255 ifm24 Code base for XAI Project:
 
 The code held in this repository contains the initial code for the prototypical part network (ProtoPNet)
@@ -68,3 +69,5 @@ the nearest latent training patches, before running this script
 
 Instructions for combining several ProtoPNet models (Jupyter Notebook required):
 1. Run the Jupyter Notebook combine_models.ipynb
+
+==================================================================================
