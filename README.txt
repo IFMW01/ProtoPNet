@@ -3,7 +3,7 @@
 The code held in this repository contains the initial code for the prototypical part network (ProtoPNet)
 from the paper "This Looks Like That: Deep Learning for Interpretable Image Recognition". This code base has then been built upon to create prototypes for the audio domain that can then be converted into waveforms such that the prototypes can be replayed to a user to provide more interpretability that is specific for the audio domain
 
-===================================================================================================================================
+==================================================================================
 # Orginal Read Me:
 This code package implements the prototypical part network (ProtoPNet)
 from the paper "This Looks Like That: Deep Learning for Interpretable Image Recognition"
