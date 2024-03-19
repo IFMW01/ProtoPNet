@@ -129,9 +129,9 @@ class_specific = True
 
 ##### SANITY CHECK
 # confirm prototype class identity
-load_img_dir = os.path.join(load_model_dir, 'img')
+load_img_dir = os.path.join(load_model_dir[:-5], 'epoch-40')
 
-prototype_info = np.load(os.path.join(load_img_dir, 'epoch-'+epoch_number_str, 'bb'+epoch_number_str+'.npy'))
+prototype_info = np.load(os.path.join(load_img_dir,'bb'+epoch_number_str+'.npy'))
 prototype_img_identity = prototype_info[:, -1]
 
 log('Prototypes are chosen from ' + str(len(set(prototype_img_identity))) + ' number of classes.')
