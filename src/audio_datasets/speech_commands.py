@@ -5,7 +5,7 @@ import torch
 import soundfile as sf
 import torch.nn as nn
 import numpy as np
-import utils
+from audio_datasets import utils
 from tqdm import tqdm
 from torchaudio.datasets import SPEECHCOMMANDS
 
