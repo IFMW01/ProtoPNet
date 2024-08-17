@@ -54,7 +54,8 @@ shutil.copy(src=os.path.join(os.getcwd(), __file__), dst=model_dir)
 log, logclose = create_logger(log_filename=os.path.join(model_dir, 'prune.log'))
 
 ppnet = torch.load(original_model_dir + original_model_name)
-ppnet = ppnet.cuda()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+ppnet = ppnet.to(device)
 ppnet_multi = torch.nn.DataParallel(ppnet)
 class_specific = True
 

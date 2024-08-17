@@ -90,7 +90,8 @@ def find_k_nearest_patches_to_prototypes(dataloader, # pytorch dataloader (must 
             search_batch = search_batch_input
 
         with torch.no_grad():
-            search_batch = search_batch.cuda()
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            search_batch = search_batch.to(device)
             protoL_input_torch, proto_dist_torch = \
                 prototype_network_parallel.module.push_forward(search_batch)
 
