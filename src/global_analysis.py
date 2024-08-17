@@ -39,8 +39,7 @@ start_epoch_number = int(epoch_number_str)
 # load the model
 print('load model from ' + load_model_path)
 ppnet = torch.load(load_model_path)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-ppnet = ppnet.to(device)
+ppnet = ppnet.cuda()
 ppnet_multi = torch.nn.DataParallel(ppnet)
 
 img_size = ppnet_multi.module.img_size

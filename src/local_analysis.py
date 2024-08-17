@@ -95,8 +95,7 @@ log('model base architecture: ' + model_base_architecture)
 log('experiment run: ' + experiment_run)
 
 ppnet = torch.load(load_model_path)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-ppnet = ppnet.to(device)
+ppnet = ppnet.cuda()
 ppnet_multi = torch.nn.DataParallel(ppnet)
 
 img_size = ppnet_multi.module.img_size
@@ -205,7 +204,7 @@ img_tensor = torch.Tensor(img_pil)
 img_tensor = torch.einsum("hwc->chw",img_tensor)
 img_variable = Variable(img_tensor.unsqueeze(0))
 
-images_test = img_variable.to(device)
+images_test = img_variable.cuda()
 labels_test = torch.tensor([test_image_label])
 
 logits, min_distances = ppnet_multi(images_test)

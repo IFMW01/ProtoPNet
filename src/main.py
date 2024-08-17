@@ -268,8 +268,8 @@ normalize = transforms.Normalize(mean=mean,
 
 # *************************** AUDIO DATASET **********************************
 
-train_loader,test_loader = load_datasets.load_datasets('SpeechCommands', 'mel',torch.device)
-
+train_loader,test_loader = load_datasets.load_datasets('SpeechCommands', 'mel')
+train_push_loader = train_loader
 # we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
 log('training set size: {0}'.format(len(train_loader.dataset)))
 log('push set size: {0}'.format(len(train_loader.dataset)))
@@ -285,8 +285,7 @@ ppnet = model.construct_PPNet(base_architecture=base_architecture,
                               add_on_layers_type=add_on_layers_type)
 #if prototype_activation_function == 'linear':
 #    ppnet.set_last_layer_incorrect_connection(incorrect_strength=0)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-ppnet = ppnet.to(device)
+ppnet = ppnet.cuda()
 ppnet_multi = torch.nn.DataParallel(ppnet)
 class_specific = True
 

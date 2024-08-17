@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 
 
-def load_datasets(dataset_pointer :str,pipeline:str,device):
+def load_datasets(dataset_pointer :str,pipeline:str):
     global labels
     if pipeline == 'mel':
         pipeline_on_wav = WavToMel()
@@ -34,8 +34,8 @@ def load_datasets(dataset_pointer :str,pipeline:str,device):
         raise Exception("Enter correct dataset pointer")
         
     if dataset_pointer == 'SpeechCommands' or dataset_pointer == 'audioMNIST':
-        train_set = DatasetProcessor(train_set,device)
-        test_set = DatasetProcessor(test_set,device)
+        train_set = DatasetProcessor(train_set)
+        test_set = DatasetProcessor(test_set)
 
     train_loader = DataLoader(train_set, batch_size=train_batch_size,shuffle=True)
     test_loader = DataLoader(test_set, batch_size=test_batch_size,shuffle=False)
@@ -43,15 +43,15 @@ def load_datasets(dataset_pointer :str,pipeline:str,device):
     return train_loader,test_loader
 
 class DatasetProcessor(Dataset):
-  def __init__(self, annotations, device):
+  def __init__(self, annotations):
     self.audio_files = annotations
     self.features = [] 
     self.labels = [] 
     for idx, path in enumerate(self.audio_files):
        d = torch.load(path)
        d["feature"] = d["feature"][None,:,:]
-       self.features.append(d["feature"].to(device))
-       self.labels.append(d["label"].to(device))
+       self.features.append(d["feature"])
+       self.labels.append(d["label"])
 
   def __len__(self):
     return len(self.audio_files)
