@@ -5,6 +5,7 @@ import torch
 import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+from audio_datasets import load_datasets
 from audiomentations import Compose, AddGaussianNoise, Shift, Gain
 import argparse
 import re
@@ -87,189 +88,191 @@ normalize = transforms.Normalize(mean=mean,
 # *************************** AUDIO DATASET **********************************
 
 
-class SubsetSC(SPEECHCOMMANDS):
-    def __init__(self, subset: str = None):
-        super().__init__("./", download=True)
+# class SubsetSC(SPEECHCOMMANDS):
+#     def __init__(self, subset: str = None):
+#         super().__init__("./", download=True)
 
-        def load_list(filename):
-            filepath = os.path.join(self._path, filename)
-            with open(filepath) as fileobj:
-                return [os.path.normpath(os.path.join(self._path, line.strip())) for line in fileobj]
+#         def load_list(filename):
+#             filepath = os.path.join(self._path, filename)
+#             with open(filepath) as fileobj:
+#                 return [os.path.normpath(os.path.join(self._path, line.strip())) for line in fileobj]
 
-        if subset == "validation":
-            self._walker = load_list("validation_list.txt")
-        elif subset == "testing":
-            self._walker = load_list("testing_list.txt")
-        elif subset == "training":
-            excludes = load_list("validation_list.txt") + load_list("testing_list.txt")
-            excludes = set(excludes)
-            self._walker = [w for w in self._walker if w not in excludes]
+#         if subset == "validation":
+#             self._walker = load_list("validation_list.txt")
+#         elif subset == "testing":
+#             self._walker = load_list("testing_list.txt")
+#         elif subset == "training":
+#             excludes = load_list("validation_list.txt") + load_list("testing_list.txt")
+#             excludes = set(excludes)
+#             self._walker = [w for w in self._walker if w not in excludes]
 
-train_set = SubsetSC("training")
-test_set = SubsetSC("testing")
+# train_set = SubsetSC("training")
+# test_set = SubsetSC("testing")
 
-class MelSpectogram(torch.nn.Module):
-    def __init__(
-        self,
-        input_freq=16000,
-        resample_freq=16000,
-        n_fft=1024,
-        n_mel=32,
-        stretch_factor=0.8,
-    ):
-        super().__init__()
+# class MelSpectogram(torch.nn.Module):
+#     def __init__(
+#         self,
+#         input_freq=16000,
+#         resample_freq=16000,
+#         n_fft=1024,
+#         n_mel=32,
+#         stretch_factor=0.8,
+#     ):
+#         super().__init__()
 
-        self.spec = torchaudio.transforms.Spectrogram(n_fft=n_fft, power=2)
+#         self.spec = torchaudio.transforms.Spectrogram(n_fft=n_fft, power=2)
 
-        self.mel_scale = torchaudio.transforms.MelScale(
-            n_mels=n_mel, sample_rate=resample_freq, n_stft=n_fft // 2 + 1)
+#         self.mel_scale = torchaudio.transforms.MelScale(
+#             n_mels=n_mel, sample_rate=resample_freq, n_stft=n_fft // 2 + 1)
 
-    def forward(self, waveform: torch.Tensor) -> torch.Tensor:
-        spec = self.spec(waveform)
+#     def forward(self, waveform: torch.Tensor) -> torch.Tensor:
+#         spec = self.spec(waveform)
 
-        mel = self.mel_scale(spec)
+#         mel = self.mel_scale(spec)
 
-        return mel
+#         return mel
     
-class WavToSpec(torch.nn.Module):
-    def __init__(
-        self,
-        input_freq=16000,
-        resample_freq=16000,
-        n_fft=1024,
-        n_mel=32,
-        stretch_factor=0.8,
-    ):
-        super().__init__()
+# class WavToSpec(torch.nn.Module):
+#     def __init__(
+#         self,
+#         input_freq=16000,
+#         resample_freq=16000,
+#         n_fft=1024,
+#         n_mel=32,
+#         stretch_factor=0.8,
+#     ):
+#         super().__init__()
 
-        self.spec = torchaudio.transforms.Spectrogram(n_fft=n_fft, power=2)
+#         self.spec = torchaudio.transforms.Spectrogram(n_fft=n_fft, power=2)
 
-        self.mel_scale = torchaudio.transforms.MelScale(
-            n_mels=n_mel, sample_rate=resample_freq, n_stft=n_fft // 2 + 1)
+#         self.mel_scale = torchaudio.transforms.MelScale(
+#             n_mels=n_mel, sample_rate=resample_freq, n_stft=n_fft // 2 + 1)
 
-    def forward(self, waveform: torch.Tensor) -> torch.Tensor:
-        spec = self.spec(waveform)
-        # spec = torch.from_numpy(librosa.power_to_db(spec))
-        # mel = self.mel_scale(spec)
-        spec = torch.from_numpy(librosa.power_to_db(spec))
+#     def forward(self, waveform: torch.Tensor) -> torch.Tensor:
+#         spec = self.spec(waveform)
+#         # spec = torch.from_numpy(librosa.power_to_db(spec))
+#         # mel = self.mel_scale(spec)
+#         spec = torch.from_numpy(librosa.power_to_db(spec))
 
-        return spec
+#         return spec
 
-agument = Compose([
-    Gain(p=0.25),
-    AddGaussianNoise(
-        min_amplitude=1,
-        max_amplitude=2,
-        p=0.25
-    ),
-    Shift(p=0.25),
-])
+# agument = Compose([
+#     Gain(p=0.25),
+#     AddGaussianNoise(
+#         min_amplitude=1,
+#         max_amplitude=2,
+#         p=0.25
+#     ),
+#     Shift(p=0.25),
+# ])
 
-def pad_sequence_aug(batch):
-    # Make all tensor in a batch the same length by padding with zeros
-    batch = [item.t() for item in batch]
-    batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
-    batch = agument(samples=batch, sample_rate=16000)
-    batch = torch.Tensor(batch)
-    return batch.permute(0, 2, 1)
+# def pad_sequence_aug(batch):
+#     # Make all tensor in a batch the same length by padding with zeros
+#     batch = [item.t() for item in batch]
+#     batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
+#     batch = agument(samples=batch, sample_rate=16000)
+#     batch = torch.Tensor(batch)
+#     return batch.permute(0, 2, 1)
 
-def aug_collate_fn(batch):
+# def aug_collate_fn(batch):
 
-    # A data tuple has the form:
-    # waveform, sample_rate, label, speaker_id, utterance_number
+#     # A data tuple has the form:
+#     # waveform, sample_rate, label, speaker_id, utterance_number
 
-    tensors, targets = [], []
+#     tensors, targets = [], []
 
-    # Gather in lists, and encode labels as indices
-    for waveform, _, label, *_ in batch:
-        tensors += [waveform]
-        targets += [label_to_index(label)]
-        # targets += torch.eye(35)[label_to_index(label)]
-    # tensors = np.array(tensors)
-    # Group the list of tensors into a batched tensor
-    tensors = pad_sequence_aug(tensors)
-    tensors = pipeline_to_spec(tensors)
-    targets = torch.stack(targets)
+#     # Gather in lists, and encode labels as indices
+#     for waveform, _, label, *_ in batch:
+#         tensors += [waveform]
+#         targets += [label_to_index(label)]
+#         # targets += torch.eye(35)[label_to_index(label)]
+#     # tensors = np.array(tensors)
+#     # Group the list of tensors into a batched tensor
+#     tensors = pad_sequence_aug(tensors)
+#     tensors = pipeline_to_spec(tensors)
+#     targets = torch.stack(targets)
 
-    return tensors, targets
+#     return tensors, targets
 
-labels = np.load('./lables.npy')
-labels = labels.tolist()
-# transform = torchaudio.transforms.MelSpectrogram(new_sample_rate,n_fft = 1024, hop_length=512,n_mels =32)
+# labels = np.load('./lables.npy')
+# labels = labels.tolist()
+# # transform = torchaudio.transforms.MelSpectrogram(new_sample_rate,n_fft = 1024, hop_length=512,n_mels =32)
 
-pipeline_to_spec = WavToSpec()
-pipeline_to_spec.to(dtype=torch.float32)
+# pipeline_to_spec = WavToSpec()
+# pipeline_to_spec.to(dtype=torch.float32)
 
-def label_to_index(word):
-    # Return the position of the word in labels
-    return torch.tensor(labels.index(word))
-
-
-def index_to_label(index):
-    # Return the word corresponding to the index in labels
-    # This is the inverse of label_to_index
-    return labels[index]
-
-def pad_sequence(batch):
-    # Make all tensor in a batch the same length by padding with zeros
-    batch = [item.t() for item in batch]
-    batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
-    return batch.permute(0, 2, 1)
+# def label_to_index(word):
+#     # Return the position of the word in labels
+#     return torch.tensor(labels.index(word))
 
 
-def collate_fn(batch):
+# def index_to_label(index):
+#     # Return the word corresponding to the index in labels
+#     # This is the inverse of label_to_index
+#     return labels[index]
 
-    # A data tuple has the form:
-    # waveform, sample_rate, label, speaker_id, utterance_number
-
-    tensors, targets = [], []
-
-    # Gather in lists, and encode labels as indices
-    for waveform, _, label, *_ in batch:
-        tensors += [waveform]
-        targets += [label_to_index(label)]
-        # targets += torch.eye(35)[label_to_index(label)]
-
-    # Group the list of tensors into a batched tensor
-    tensors = pad_sequence(tensors)
-    tensors = pipeline_to_spec(tensors)
-    targets = torch.stack(targets)
-
-    return tensors, targets
+# def pad_sequence(batch):
+#     # Make all tensor in a batch the same length by padding with zeros
+#     batch = [item.t() for item in batch]
+#     batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
+#     return batch.permute(0, 2, 1)
 
 
+# def collate_fn(batch):
 
-train_loader = torch.utils.data.DataLoader(
-    train_set,
-    batch_size=train_batch_size,
-    shuffle=True,
-    num_workers=4,
-    pin_memory=False,
-    collate_fn = aug_collate_fn
-)
-train_push_loader = torch.utils.data.DataLoader(
-    train_set,
-    batch_size=train_push_batch_size,
-    shuffle=False,
-    num_workers=4,
-    pin_memory=False,
-    collate_fn = collate_fn
-)
-test_loader = torch.utils.data.DataLoader(
-    test_set,
-    batch_size=test_batch_size,
-    shuffle=False,
-    drop_last=False,
-    num_workers=4,
-    pin_memory=False,
-    collate_fn = collate_fn
-)
+#     # A data tuple has the form:
+#     # waveform, sample_rate, label, speaker_id, utterance_number
+
+#     tensors, targets = [], []
+
+#     # Gather in lists, and encode labels as indices
+#     for waveform, _, label, *_ in batch:
+#         tensors += [waveform]
+#         targets += [label_to_index(label)]
+#         # targets += torch.eye(35)[label_to_index(label)]
+
+#     # Group the list of tensors into a batched tensor
+#     tensors = pad_sequence(tensors)
+#     tensors = pipeline_to_spec(tensors)
+#     targets = torch.stack(targets)
+
+#     return tensors, targets
+
+
+
+# train_loader = torch.utils.data.DataLoader(
+#     train_set,
+#     batch_size=train_batch_size,
+#     shuffle=True,
+#     num_workers=4,
+#     pin_memory=False,
+#     collate_fn = aug_collate_fn
+# )
+# train_push_loader = torch.utils.data.DataLoader(
+#     train_set,
+#     batch_size=train_push_batch_size,
+#     shuffle=False,
+#     num_workers=4,
+#     pin_memory=False,
+#     collate_fn = collate_fn
+# )
+# test_loader = torch.utils.data.DataLoader(
+#     test_set,
+#     batch_size=test_batch_size,
+#     shuffle=False,
+#     drop_last=False,
+#     num_workers=4,
+#     pin_memory=False,
+#     collate_fn = collate_fn
+# )
 
 # *************************** AUDIO DATASET **********************************
 
+train_loader,test_loader = load_datasets.load_datasets('SpeechCommands', 'mel',torch.device)
+
 # we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
 log('training set size: {0}'.format(len(train_loader.dataset)))
-log('push set size: {0}'.format(len(train_push_loader.dataset)))
+log('push set size: {0}'.format(len(train_loader.dataset)))
 log('test set size: {0}'.format(len(test_loader.dataset)))
 log('batch size: {0}'.format(train_batch_size))
 

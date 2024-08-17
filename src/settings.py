@@ -14,6 +14,9 @@ train_push_dir = data_path + 'train_cropped/'
 train_batch_size = 256
 test_batch_size = 256
 train_push_batch_size = 256
+dataset_pointer = 'SpeechCommands'
+pipeline = 'mel'
+
 
 joint_optimizer_lrs = {'features': 1e-4,
                        'add_on_layers': 3e-3,
