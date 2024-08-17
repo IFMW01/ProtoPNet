@@ -32,7 +32,7 @@ def convert_to_spectograms(data_folder, destination_folder,pipeline=False,downsa
 def create_speechcommands(pipeline,pipeline_on_wav,dataset_pointer):
     train_temp_dir = f'./{pipeline}/{dataset_pointer}/Train'
     test_temp_dir = f'./{pipeline}/{dataset_pointer}/Test'
-    labels = np.load('./labels/speech_commands_labels.npy')
+    labels = np.load('./speech_commands_labels.npy')
     labels = labels.tolist()
     if not os.path.isdir(f'{train_temp_dir}'):
       train_list = SubsetSC("training") 
