@@ -12,9 +12,6 @@ from tqdm import tqdm
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-labels = np.load('./labels/audiomnist_labels.npy')
-labels = labels.tolist()
-
 #Script to process audioMNIST
 
 def convert_to_spectograms(data_folder, destination_folder,pipeline=False,downsample=16000):
